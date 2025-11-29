@@ -31,7 +31,7 @@ const formSchema = z.object({
   shippingAddress: z.string().min(10, {
     message: "Shipping address must be at least 10 characters.",
   }),
-  quantity: z.coerce.number().min(1, {
+  quantity: z.number().min(1, {
     message: "Quantity must be at least 1.",
   }).max(999, {
     message: "Quantity cannot exceed 999.",
@@ -143,7 +143,12 @@ export default function PreorderPage() {
                 <FormItem>
                   <FormLabel>Quantity</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="1" {...field} />
+                    <Input
+                      type="number"
+                      placeholder="1"
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
