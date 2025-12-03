@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -39,6 +40,9 @@ const formSchema = z.object({
 });
 
 export default function PreorderPage() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
+
   // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -53,11 +57,42 @@ export default function PreorderPage() {
   });
 
   // 2. Define a submit handler.
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
-    alert(JSON.stringify(values, null, 2)); // For demonstration
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsSubmitting(true);
+    setSubmitStatus("idle");
+
+    try {
+      const response = await fetch("https://api.monkreflections.com/api/forms", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: "Preorder - Rekindle Book",
+          data: {
+            ...values,
+            timestamp: new Date().toISOString(),
+          },
+        }),
+      });
+
+      if (response.ok) {
+        setSubmitStatus("success");
+        form.reset();
+
+        // Reset success message after 5 seconds
+        setTimeout(() => {
+          setSubmitStatus("idle");
+        }, 5000);
+      } else {
+        setSubmitStatus("error");
+      }
+    } catch (error) {
+      console.error("Submission error:", error);
+      setSubmitStatus("error");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -154,9 +189,21 @@ export default function PreorderPage() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full">
-              Notify Me
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Notify Me"}
             </Button>
+
+            {submitStatus === "success" && (
+              <div className="rounded-md bg-green-50 p-4 text-sm text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                <strong>Success!</strong> Thank you for your preorder request. We'll contact you when the physical books are available.
+              </div>
+            )}
+
+            {submitStatus === "error" && (
+              <div className="rounded-md bg-red-50 p-4 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-400">
+                <strong>Error:</strong> Failed to submit your request. Please try again or contact us directly.
+              </div>
+            )}
           </form>
         </Form>
       </div>
