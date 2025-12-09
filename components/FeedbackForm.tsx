@@ -176,7 +176,7 @@ export function FeedbackForm() {
                     />
                   </FormControl>
                   <FormDescription>
-                    {field.value.length}/1000 characters
+                    {(field.value || '').length}/1000 characters
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
